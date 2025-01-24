@@ -1,10 +1,19 @@
+package ru.yandex.praktikumchatapp
+
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -39,6 +48,17 @@ class ChatViewModelTest {
     @Test
     fun testReceiveMessage_concurrentMessages() = runTest {
         val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
-
+        val scope = CoroutineScope(SupervisorJob())
+        val jobs = mutableListOf<Job>()
+        messagesToSend.forEach {
+            jobs.add(
+                scope.launch {
+                    viewModel.sendMyMessage(it.text)
+                }
+            )
+        }
+        jobs.joinAll()
+        assertThat(viewModel.messages.value.size, equalTo(messagesToSend.size))
+        assert(viewModel.messages.value.containsAll(messagesToSend))
     }
 }
