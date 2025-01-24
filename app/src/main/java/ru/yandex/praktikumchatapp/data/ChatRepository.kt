@@ -3,7 +3,6 @@ package ru.yandex.praktikumchatapp.data
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.retryWhen
-import java.io.IOException
 
 class ChatRepository(
     private val api: ChatApi = ChatApi()
@@ -11,7 +10,7 @@ class ChatRepository(
 
     fun getReplyMessage(): Flow<String> {
         return api.getReply().retryWhen { cause, attempt ->
-            if (cause is IOException || attempt < 5) {
+            if (cause is Exception && attempt < 5) {
                 delay(currentDelay)
                 currentDelay *= DELAY_FACTOR
                 true

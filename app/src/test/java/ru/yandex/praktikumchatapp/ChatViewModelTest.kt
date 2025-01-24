@@ -1,5 +1,6 @@
 package ru.yandex.praktikumchatapp
 
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,13 +43,13 @@ class ChatViewModelTest {
     fun `send message should update messages with MyMessage`() = runTest {
         val message = Message.MyMessage("TestMessage")
         viewModel.sendMyMessage(message.text)
-        assert(viewModel.messages.value.contains(message))
+        assertEquals(listOf(message), viewModel.messages.value)
     }
 
     @Test
     fun testReceiveMessage_concurrentMessages() = runTest {
         val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
-        val scope = CoroutineScope(SupervisorJob())
+        val scope = CoroutineScope(testDispatcher + SupervisorJob())
         val jobs = mutableListOf<Job>()
         messagesToSend.forEach {
             jobs.add(
